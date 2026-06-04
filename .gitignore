@@ -42,7 +42,6 @@ wheels/
 
 # Django
 local_settings.py
-/media/
 /staticfiles/
 
 # Environment variables
