@@ -1,0 +1,41 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Вход | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="page-header">
+        <h1><i class="fas fa-sign-in-alt"></i> Вход в аккаунт</h1>
+        <p>Введите ваши данные для входа</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-triangle"></i> 
+            Неправильное имя пользователя или пароль
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="id_username"><i class="fas fa-user"></i> Имя пользователя</label>
+            <input type="text" name="username" id="id_username" class="form-control" required autofocus>
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password"><i class="fas fa-lock"></i> Пароль</label>
+            <input type="password" name="password" id="id_password" class="form-control" required>
+        </div>
+        
+        <button type="submit" class="btn" style="width: 100%;">
+            <i class="fas fa-sign-in-alt"></i> Войти
+        </button>
+    </form>
+    
+    <div class="text-center mt-2">
+        <p>Нет аккаунта? <a href="{% url 'register' %}">Зарегистрируйтесь</a></p>
+    </div>
+</div>
+{% endblock %}

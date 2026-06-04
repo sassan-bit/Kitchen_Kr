@@ -1,0 +1,204 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Корзина | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-shopping-cart"></i> Корзина покупок</h1>
+</div>
+
+{% if cart_items %}
+<!-- Если в корзине есть товары — показываем таблицу -->
+<table class="cart-table table table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th scope="col" style="width: 50%">Кухня</th>
+            <th scope="col" class="text-center">Цена</th>
+            <th scope="col" class="text-center">Количество</th>
+            <th scope="col" class="text-center">Итого</th>
+            <th scope="col" class="text-center">Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cart_items %}
+        <tr>
+            <td>
+                <div class="d-flex align-items-center">
+                    {% if item.kitchen.image %}
+                    <img src="{{ item.kitchen.image.url }}" alt="{{ item.kitchen.name }}" 
+                         class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                    <div class="img-thumbnail me-3 d-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; background-color: #f8f9fa;">
+                        <i class="fas fa-utensils text-secondary"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h5 class="mb-1">{{ item.kitchen.name }}</h5>
+                        <p class="text-muted mb-0 small">{{ item.kitchen.description|truncatechars:60 }}</p>
+                    </div>
+                </div>
+            </td>
+            <td class="text-center fw-bold">
+                {{ item.kitchen.price|floatformat:"0" }} ₽
+            </td>
+            <td class="text-center">
+                <form method="post" action="{% url 'update_cart' item.id %}" class="d-flex justify-content-center">
+                    {% csrf_token %}
+                    <div class="input-group" style="width: 120px;">
+                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1" 
+                               class="form-control form-control-sm text-center">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </form>
+            </td>
+            <td class="text-center fw-bold text-primary">
+                {{ item.total_price|floatformat:"0" }} ₽
+            </td>
+            <td class="text-center">
+                <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-trash-alt"></i> Удалить
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Итоговая сумма -->
+<div class="row justify-content-end">
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h4 class="card-title mb-3">Итоги заказа</h4>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Товаров:</span>
+                    <span class="fw-bold">{{ cart_items|length }} шт.</span>
+                </div>
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Общая сумма:</span>
+                    <span class="fs-4 fw-bold text-primary">{{ total|floatformat:"0" }} ₽</span>
+                </div>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'catalog:catalog' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Продолжить покупки
+                    </a>
+                    <a href="{% url 'create_order' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-check"></i> Оформить заказ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- БЛОК ПУСТОЙ КОРОЗИНЫ (ОБНОВЛЕННЫЙ) -->
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-body text-center p-5">
+                    <!-- Иконка -->
+                    <div class="mb-4">
+                        <div class="empty-cart-icon mx-auto">
+                            <i class="fas fa-shopping-cart fa-5x text-muted"></i>
+                            <i class="fas fa-ban fa-3x text-danger position-absolute" style="top: 25px; right: 25px;"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Заголовок и текст -->
+                    <h2 class="fw-bold mb-3">Ваша корзина пуста</h2>
+                    <p class="text-muted mb-4 fs-5">
+                        Похоже, вы ещё не добавили ни одного товара. 
+                        Посмотрите наш каталог кухонь и выберите то, что вам по душе!
+                    </p>
+                    
+                    <!-- Кнопка действия -->
+                    <div class="d-grid gap-3 col-md-8 mx-auto">
+                        <a href="{% url 'catalog:catalog' %}" class="btn btn-primary btn-lg py-3">
+                            <i class="fas fa-store me-2"></i> Перейти в каталог
+                        </a>
+                        <a href="{% url 'contacts' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-question-circle me-2"></i> Нужна помощь с выбором?
+                        </a>
+                    </div>
+                    
+                    <!-- Дополнительные рекомендации -->
+                    <div class="mt-5 pt-4 border-top">
+                        <h5 class="mb-3">Популярные категории</h5>
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <a href="{% url 'catalog:catalog' %}" class="text-decoration-none">
+                                    <div class="p-3 bg-light rounded-3 hover-lift">
+                                        <i class="fas fa-couch fa-2x mb-2 text-primary"></i>
+                                        <div class="small">Классические кухни</div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="{% url 'catalog:catalog' %}" class="text-decoration-none">
+                                    <div class="p-3 bg-light rounded-3 hover-lift">
+                                        <i class="fas fa-gem fa-2x mb-2 text-success"></i>
+                                        <div class="small">Премиум кухни</div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="{% url 'catalog:catalog' %}" class="text-decoration-none">
+                                    <div class="p-3 bg-light rounded-3 hover-lift">
+                                        <i class="fas fa-palette fa-2x mb-2 text-warning"></i>
+                                        <div class="small">Современный дизайн</div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <a href="{% url 'catalog:catalog' %}" class="text-decoration-none">
+                                    <div class="p-3 bg-light rounded-3 hover-lift">
+                                        <i class="fas fa-leaf fa-2x mb-2 text-info"></i>
+                                        <div class="small">Эко-материалы</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Добавим немного стилей для украшения -->
+<style>
+    .empty-cart-icon {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .hover-lift {
+        transition: transform 0.2s ease;
+    }
+    
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        background-color: #e9ecef !important;
+    }
+    
+    .cart-table img {
+        border-radius: 8px;
+    }
+    
+    .cart-table tbody tr:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+</style>
+{% endblock %}

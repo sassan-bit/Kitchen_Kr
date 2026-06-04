@@ -1,0 +1,418 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Кухни на заказ - Главная{% endblock %}
+
+{% block content %}
+<!-- Горизонтальная прокручиваемая лента с кухнями -->
+<div class="kitchen-scroll-section mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title">
+            <i class="fas fa-utensils me-2"></i>Наши кухни
+        </h2>
+        <a href="{% url 'catalog:catalog' %}" class="btn btn-outline-primary btn-sm">
+            Смотреть все <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+    <div class="kitchen-scroll-container">
+        <div class="kitchen-scroll-wrapper">
+            {% for kitchen in featured_kitchens %}
+            <div class="kitchen-scroll-item">
+                <a href="{% url 'catalog:kitchen_detail' kitchen.id %}" class="kitchen-scroll-card">
+                    {% if kitchen.image %}
+                    <div class="kitchen-scroll-image">
+                        <img src="{{ kitchen.image.url }}" alt="{{ kitchen.name }}" loading="lazy">
+                    </div>
+                    {% else %}
+                    <div class="kitchen-scroll-image kitchen-scroll-no-image">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    {% endif %}
+                    <div class="kitchen-scroll-info">
+                        <h4 class="kitchen-scroll-name">{{ kitchen.name|truncatechars:30 }}</h4>
+                        <div class="kitchen-scroll-price">
+                            <span class="kitchen-scroll-price-value">{{ kitchen.price|floatformat:"0"|intcomma }}</span>
+                            <span class="kitchen-scroll-price-currency"> ₽</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="kitchen-scroll-btn kitchen-scroll-btn-prev" aria-label="Предыдущие">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="kitchen-scroll-btn kitchen-scroll-btn-next" aria-label="Следующие">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Промо-слайдер -->
+<div id="promoCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        {% for kitchen in featured_kitchens %}
+        <button type="button" data-bs-target="#promoCarousel" 
+                data-bs-slide-to="{{ forloop.counter0 }}" 
+                class="{% if forloop.first %}active{% endif %}"></button>
+        {% endfor %}
+    </div>
+    
+    <div class="carousel-inner rounded-3">
+        {% for kitchen in featured_kitchens %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <div class="row align-items-center bg-light p-5">
+                <div class="col-md-6">
+                    <h1 class="display-5 fw-bold" style="font-family: 'Tilda Sans', 'Inter', sans-serif; color: var(--dark, #3D3D3D);">{{ kitchen.name }}</h1>
+                    <p class="lead" style="font-family: 'Tilda Sans', 'Inter', sans-serif; color: var(--dark-text, #4A4A4A);">{{ kitchen.description|truncatewords:30 }}</p>
+                    <div class="promo-price mb-3" style="display: flex; align-items: baseline; gap: 4px;">
+                        <span class="promo-price-value" style="font-size: 2rem; font-weight: 700; color: var(--primary, #8B7355); font-family: 'Tilda Sans', 'Inter', sans-serif; letter-spacing: -0.3px; line-height: 1; background: linear-gradient(135deg, var(--primary, #8B7355), var(--accent, #C9A961)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{{ kitchen.price|floatformat:"0"|intcomma }}</span>
+                        <span class="promo-price-currency" style="font-size: 1.4rem; font-weight: 600; color: var(--primary, #8B7355); font-family: 'Tilda Sans', 'Inter', sans-serif; position: relative; top: -1px;"> ₽</span>
+                    </div>
+                    <a href="{% url 'catalog:kitchen_detail' kitchen.id %}" class="btn btn-primary btn-lg" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 500;">
+                        <i class="fas fa-eye"></i> Подробнее
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    {% if kitchen.image %}
+                    <img src="{{ kitchen.image.url }}" class="d-block w-100 rounded shadow" 
+                         alt="{{ kitchen.name }}" style="max-height: 400px; object-fit: cover;">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+</div>
+
+<!-- Быстрые ссылки -->
+<div class="row mb-5">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 border-0 shadow-sm hover-lift">
+            <div class="card-body text-center p-4">
+                <i class="fas fa-crown fa-3x text-warning mb-3"></i>
+                <h3 style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--dark, #3D3D3D);">Премиум кухни</h3>
+                <p style="font-family: 'Tilda Sans', 'Inter', sans-serif; color: var(--dark-text, #4A4A4A);">Элитные кухни из натуральных материалов</p>
+                <a href="{% url 'catalog:catalog' %}?min_price=150000" class="btn btn-outline-warning" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 500;">Смотреть от 150 000 ₽</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 border-0 shadow-sm hover-lift">
+            <div class="card-body text-center p-4">
+                <i class="fas fa-wallet fa-3x text-success mb-3"></i>
+                <h3 style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--dark, #3D3D3D);">Эконом вариант</h3>
+                <p style="font-family: 'Tilda Sans', 'Inter', sans-serif; color: var(--dark-text, #4A4A4A);">Качественные кухни по доступным ценам</p>
+                <a href="{% url 'catalog:catalog' %}?max_price=80000" class="btn btn-outline-success" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 500;">Смотреть до 80 000 ₽</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 border-0 shadow-sm hover-lift">
+            <div class="card-body text-center p-4">
+                <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                <h3 style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--dark, #3D3D3D);">Быстрый заказ</h3>
+                <p style="font-family: 'Tilda Sans', 'Inter', sans-serif; color: var(--dark-text, #4A4A4A);">Готовые решения с быстрой доставкой</p>
+                <a href="{% url 'catalog:catalog' %}?sort=newest" class="btn btn-outline-primary" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 500;">Новинки</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Раздел: Премиум кухни -->
+{% if premium_kitchens %}
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--dark, #3D3D3D);"><i class="fas fa-crown text-warning"></i> Премиум кухни</h2>
+        <a href="{% url 'catalog:catalog' %}?min_price=150000&sort=price_desc" class="btn btn-link" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 500; color: var(--primary, #8B7355);">
+            Все премиум кухни <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for kitchen in premium_kitchens %}
+        <div class="col">
+            {% include 'catalog/_kitchen_card.html' with kitchen=kitchen %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Раздел: Бюджетные кухни -->
+{% if budget_kitchens %}
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--dark, #3D3D3D);"><i class="fas fa-wallet text-success"></i> Бюджетные кухни</h2>
+        <a href="{% url 'catalog:catalog' %}?max_price=80000&sort=price_asc" class="btn btn-link" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 500; color: var(--primary, #8B7355);">
+            Все бюджетные кухни <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for kitchen in budget_kitchens %}
+        <div class="col">
+            {% include 'catalog/_kitchen_card.html' with kitchen=kitchen %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Призыв к действию -->
+<div class="bg-dark text-white rounded-3 p-5 text-center mb-5">
+    <h2 class="display-6 mb-3" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600;">Не нашли подходящую кухню?</h2>
+    <p class="lead mb-4" style="font-family: 'Tilda Sans', 'Inter', sans-serif;">Мы изготовим кухню по вашему индивидуальному проекту!</p>
+    <a href="{% url 'contacts' %}" class="btn btn-light btn-lg" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 500;">
+        <i class="fas fa-pencil-ruler"></i> Заказать дизайн-проект
+    </a>
+</div>
+
+<style>
+/* Горизонтальная прокручиваемая лента */
+.kitchen-scroll-section {
+    margin-bottom: 4rem;
+}
+
+.section-title {
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 0;
+}
+
+.kitchen-scroll-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    background: white;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px var(--shadow);
+}
+
+.kitchen-scroll-wrapper {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--secondary) var(--light);
+    padding: 0.5rem 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kitchen-scroll-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.kitchen-scroll-wrapper::-webkit-scrollbar-track {
+    background: var(--light);
+    border-radius: 4px;
+}
+
+.kitchen-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: var(--secondary);
+    border-radius: 4px;
+}
+
+.kitchen-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
+}
+
+.kitchen-scroll-item {
+    flex: 0 0 280px;
+    min-width: 280px;
+}
+
+.kitchen-scroll-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px var(--shadow);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+}
+
+.kitchen-scroll-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(139, 115, 85, 0.2);
+    text-decoration: none;
+    color: inherit;
+}
+
+.kitchen-scroll-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: var(--light);
+    position: relative;
+}
+
+.kitchen-scroll-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.kitchen-scroll-card:hover .kitchen-scroll-image img {
+    transform: scale(1.1);
+}
+
+.kitchen-scroll-no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray);
+    font-size: 3rem;
+}
+
+.kitchen-scroll-info {
+    padding: 1.25rem;
+}
+
+.kitchen-scroll-name {
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.3;
+}
+
+.kitchen-scroll-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 0.5rem;
+    line-height: 1.2;
+}
+
+.kitchen-scroll-price-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary, #8B7355);
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    letter-spacing: -0.3px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--primary, #8B7355), var(--accent, #C9A961));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.kitchen-scroll-price-currency {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary, #8B7355);
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    position: relative;
+    top: -1px;
+}
+
+.kitchen-scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+    z-index: 10;
+    opacity: 0.9;
+}
+
+.kitchen-scroll-btn:hover {
+    background: var(--primary);
+    color: white;
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(139, 115, 85, 0.3);
+}
+
+.kitchen-scroll-btn-prev {
+    left: 1rem;
+}
+
+.kitchen-scroll-btn-next {
+    right: 1rem;
+}
+
+@media (max-width: 768px) {
+    .kitchen-scroll-item {
+        flex: 0 0 240px;
+        min-width: 240px;
+    }
+    
+    .kitchen-scroll-btn {
+        display: none;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+}
+
+.hover-lift {
+    transition: transform 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-10px);
+}
+.carousel-item {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-radius: 16px;
+    overflow: hidden;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scrollWrapper = document.querySelector('.kitchen-scroll-wrapper');
+    const prevBtn = document.querySelector('.kitchen-scroll-btn-prev');
+    const nextBtn = document.querySelector('.kitchen-scroll-btn-next');
+    
+    if (scrollWrapper && prevBtn && nextBtn) {
+        const scrollAmount = 300;
+        
+        prevBtn.addEventListener('click', () => {
+            scrollWrapper.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            scrollWrapper.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        });
+        
+        // Скрываем кнопки, если прокрутка не нужна
+        function checkScrollButtons() {
+            const isScrollable = scrollWrapper.scrollWidth > scrollWrapper.clientWidth;
+            prevBtn.style.display = isScrollable ? 'flex' : 'none';
+            nextBtn.style.display = isScrollable ? 'flex' : 'none';
+        }
+        
+        checkScrollButtons();
+        window.addEventListener('resize', checkScrollButtons);
+    }
+});
+</script>
+{% endblock %}

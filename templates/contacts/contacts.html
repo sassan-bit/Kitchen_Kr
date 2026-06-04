@@ -1,0 +1,106 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Контакты | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Наши контакты</h1>
+    <p>Свяжитесь с нами любым удобным способом</p>
+</div>
+
+<div class="contact-info">
+    <h2><i class="fas fa-map-marker-alt"></i> Контактная информация</h2>
+    
+    {% if contact_info %}
+    <div class="contact-item">
+        <i class="fas fa-phone"></i>
+        <div>
+            <strong>Телефон:</strong>
+            <p>{{ contact_info.phone }}</p>
+        </div>
+    </div>
+    
+    <div class="contact-item">
+        <i class="fas fa-envelope"></i>
+        <div>
+            <strong>Email:</strong>
+            <p>{{ contact_info.email }}</p>
+        </div>
+    </div>
+    
+    <div class="contact-item">
+        <i class="fas fa-map-pin"></i>
+        <div>
+            <strong>Адрес:</strong>
+            <p>{{ contact_info.address }}</p>
+        </div>
+    </div>
+    
+    <div class="contact-item">
+        <i class="fas fa-clock"></i>
+        <div>
+            <strong>Режим работы:</strong>
+            <p>{{ contact_info.working_hours }}</p>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-center">Контактная информация скоро появится</p>
+    {% endif %}
+</div>
+
+<div class="form-container">
+    <h2><i class="fas fa-comment-dots"></i> Форма обратной связи</h2>
+    <p>Задайте вопрос или оставьте заявку на консультацию</p>
+    
+    <form method="post" action="{% url 'feedback' %}">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="name"><i class="fas fa-user"></i> Ваше имя</label>
+            <input type="text" id="name" name="name" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email"><i class="fas fa-envelope"></i> Ваш email</label>
+            <input type="email" id="email" name="email" class="form-control" required>
+            <p class="form-help">На этот email мы отправим ответ</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="message"><i class="fas fa-edit"></i> Сообщение</label>
+            <textarea id="message" name="message" class="form-control" required 
+                      placeholder="Опишите ваш вопрос или пожелания..."></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-success">
+            <i class="fas fa-paper-plane"></i> Отправить сообщение
+        </button>
+    </form>
+</div>
+
+<div class="text-center mt-2">
+    <p>Мы в социальных сетях и медиа:</p>
+    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 1rem;">
+        <!-- Мессенджер MAX -->
+        <a href="https://max.ru" target="_blank" class="btn" style="display: inline-flex; align-items: center; gap: 8px; background-color: #1a73e8;">
+            <i class="fas fa-comment-alt"></i>
+            MAX
+        </a>
+        
+        <!-- Rutube -->
+        <a href="https://rutube.ru" target="_blank" class="btn" style="display: inline-flex; align-items: center; gap: 8px; background-color: #f00;">
+            <i class="fab fa-youtube"></i> <!-- Используем иконку YouTube как наиболее узнаваемую для видеосервиса -->
+            Rutube
+        </a>
+        
+        <!-- Россия 1 -->
+        <a href="https://russia.tv" target="_blank" class="btn" style="display: inline-flex; align-items: center; gap: 8px; background-color: #0047bb;">
+            <i class="fas fa-tv"></i>
+            Россия 1
+        </a>
+    </div>
+    <p class="form-help" style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+        Свяжитесь с нами удобным способом или следите за новостями.
+    </p>
+</div>
+{% endblock %}

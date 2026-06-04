@@ -1,0 +1,842 @@
+﻿<!-- catalog/templates/catalog/kitchen_card.html -->
+
+{% load static %}
+{% load humanize %}
+
+<div class="kitchen-card" data-kitchen-id="{{ kitchen.id }}">
+    <!-- Блок с изображением и иконками поверх -->
+    <a class="kitchen-card__image-container" href="{% url 'catalog:kitchen_detail' kitchen.id %}">
+        {% if kitchen.image %}
+        <img src="{{ kitchen.image.url }}" 
+             alt="{{ kitchen.name }}" 
+             class="kitchen-card__image"
+             loading="lazy">
+        {% else %}
+        <div class="kitchen-card__no-image">
+            <i class="fas fa-image"></i>
+            <span>Нет изображения</span>
+        </div>
+        {% endif %}
+        
+        <!-- Бейдж для избранного (показывается только если товар в избранном) -->
+        <div class="kitchen-card__badge {% if kitchen.id in favorite_ids %}visible{% endif %}" 
+             id="favorite-badge-{{ kitchen.id }}">
+            <i class="fas fa-heart"></i>
+            <span>В избранном</span>
+        </div>
+
+        <!-- Интерактивное сердечко в углу -->
+        <button
+            class="kitchen-card__favorite-fab {% if kitchen.id in favorite_ids %}active{% endif %}"
+            type="button"
+            title="{% if kitchen.id in favorite_ids %}Удалить из избранного{% else %}Добавить в избранное{% endif %}"
+            data-kitchen-id="{{ kitchen.id }}"
+            data-is-favorite="{% if kitchen.id in favorite_ids %}true{% else %}false{% endif %}"
+            data-toggle-url="{% url 'toggle_favorite' kitchen.id %}"
+        >
+            <i class="{% if kitchen.id in favorite_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+        </button>
+        
+        <!-- Бейдж скидки или акции (пример) -->
+        {% if kitchen.discount %}
+        <div class="kitchen-card__badge kitchen-card__badge--discount">
+            -{{ kitchen.discount }}%
+        </div>
+        {% endif %}
+        
+        <!-- Кнопка быстрого просмотра -->
+    </a>
+    
+    <!-- Блок с информацией о товаре -->
+    <div class="kitchen-card__content">
+        <!-- Категория товара -->
+        {% if kitchen.category %}
+        <div class="kitchen-card__category">
+            {{ kitchen.category.name }}
+        </div>
+        {% endif %}
+        
+        <!-- Название товара -->
+        <h3 class="kitchen-card__title">
+            <a href="{% url 'catalog:kitchen_detail' kitchen.id %}" 
+               class="kitchen-card__title-link">
+                {{ kitchen.name|truncatechars:50 }}
+            </a>
+        </h3>
+        
+        <!-- Описание товара -->
+        <p class="kitchen-card__description">
+            {{ kitchen.description|truncatechars:100 }}
+        </p>
+        
+        <!-- Рейтинг товара -->
+        <div class="kitchen-card__rating">
+            {% if comments_dict %}
+                {% for key, value in comments_dict.items %}
+                    {% if key == kitchen.id %}
+                    <div class="kitchen-card__stars">
+                        {% with rating=value.avg_rating|floatformat:0 %}
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= rating|add:"0" %}
+                            <i class="fas fa-star" style="color: #FFC107;"></i>
+                            {% else %}
+                            <i class="far fa-star" style="color: #ddd;"></i>
+                            {% endif %}
+                        {% endfor %}
+                        {% endwith %}
+                    </div>
+                    <span class="kitchen-card__rating-count" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-size: 0.85rem; color: var(--gray);">
+                        {{ value.avg_rating }} ({{ value.count }} отзыв{{ value.count|pluralize:"ов,а,ов" }})
+                    </span>
+                    {% endif %}
+                {% endfor %}
+                {% if kitchen.id not in comments_dict %}
+                    <div class="kitchen-card__stars">
+                        {% for i in "12345"|make_list %}
+                        <i class="far fa-star" style="color: #ddd;"></i>
+                        {% endfor %}
+                    </div>
+                    <span class="kitchen-card__rating-count" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-size: 0.85rem; color: var(--gray);">
+                        Нет отзывов
+                    </span>
+                {% endif %}
+            {% else %}
+                <div class="kitchen-card__stars">
+                    {% for i in "12345"|make_list %}
+                    <i class="far fa-star" style="color: #ddd;"></i>
+                    {% endfor %}
+                </div>
+                <span class="kitchen-card__rating-count" style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-size: 0.85rem; color: var(--gray);">
+                    Нет отзывов
+                </span>
+            {% endif %}
+        </div>
+        
+        <!-- Характеристики товара -->
+        <ul class="kitchen-card__features">
+            {% if kitchen.material %}
+            <li class="kitchen-card__feature">
+                <i class="fas fa-palette"></i>
+                {{ kitchen.material }}
+            </li>
+            {% endif %}
+            
+            {% if kitchen.style %}
+            <li class="kitchen-card__feature">
+                <i class="fas fa-paint-brush"></i>
+                {{ kitchen.style }}
+            </li>
+            {% endif %}
+            
+            {% if kitchen.dimensions %}
+            <li class="kitchen-card__feature">
+                <i class="fas fa-ruler-combined"></i>
+                {{ kitchen.dimensions }}
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <!-- Блок с ценой и действиями -->
+    <div class="kitchen-card__footer">
+        <div class="kitchen-card__price-section">
+            {% if kitchen.old_price %}
+            <div class="kitchen-card__old-price">
+                <span class="old-price-value">{{ kitchen.old_price|floatformat:0|intcomma }}</span>
+                <span class="old-price-currency">₽</span>
+            </div>
+            {% endif %}
+            
+            <div class="kitchen-card__price">
+                <span class="price-value">{{ kitchen.price|floatformat:0|intcomma }}</span>
+                <span class="price-currency">₽</span>
+            </div>
+            
+            {% if kitchen.price_per_meter %}
+            <div class="kitchen-card__price-per">
+                <i class="fas fa-ruler-combined"></i>
+                <span>{{ kitchen.price_per_meter|floatformat:0|intcomma }} ₽/м²</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="kitchen-card__actions">
+            <!-- Кнопка добавления в корзину -->
+            <form method="post" action="{% url 'add_to_cart' kitchen.id %}" class="d-flex flex-fill">
+                {% csrf_token %}
+                <button class="kitchen-card__cart-btn w-100"
+                        type="submit"
+                        title="Добавить в корзину">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="kitchen-card__btn-text">В корзину</span>
+                </button>
+            </form>
+            
+            <!-- Кнопка сравнения -->
+            <button class="kitchen-card__compare-btn"
+                    type="button"
+                    title="Добавить к сравнению">
+                <i class="fas fa-balance-scale"></i>
+                <span class="kitchen-card__btn-text">Сравнить</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно быстрого просмотра -->
+<div class="kitchen-modal" id="quickViewModal-{{ kitchen.id }}" style="display: none;">
+    <div class="kitchen-modal__content">
+        <button class="kitchen-modal__close">&times;</button>
+        <!-- Контент модального окна будет загружаться через AJAX -->
+    </div>
+</div>
+
+<!-- Стили для карточки -->
+<style>
+:root {
+    --card-primary: #8B7355;
+    --card-primary-dark: #6B5A42;
+    --card-light: #F5F1EB;
+    --card-border: #E5DDD0;
+    --card-shadow: rgba(139, 115, 85, 0.1);
+}
+
+.kitchen-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px var(--card-shadow);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 1px solid var(--card-border);
+}
+
+.kitchen-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(139, 115, 85, 0.15);
+    border-color: var(--card-primary-light, #D4C4B0);
+}
+
+.kitchen-card__image-container {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.kitchen-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.kitchen-card:hover .kitchen-card__image {
+    transform: scale(1.05);
+}
+
+.kitchen-card__no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.kitchen-card__no-image i {
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.kitchen-card__badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #ff4757;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.kitchen-card__badge.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.kitchen-card__badge--discount {
+    background: #ff6b6b;
+    left: auto;
+    right: 10px;
+}
+
+.kitchen-card__favorite-fab {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff6b6b;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+    z-index: 3;
+}
+
+.kitchen-card__favorite-fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.kitchen-card__favorite-fab i {
+    font-size: 18px;
+}
+
+.kitchen-card__favorite-fab.active {
+    background: #ffe3e3;
+    color: #e03131;
+}
+
+.kitchen-card__favorite-fab.is-loading {
+    opacity: 0.65;
+    pointer-events: none;
+}
+
+.kitchen-card__quick-view {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.kitchen-card:hover .kitchen-card__quick-view {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.kitchen-card__quick-view:hover {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.kitchen-card__content {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.kitchen-card__category {
+    font-size: 12px;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.kitchen-card__title {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.kitchen-card__title-link {
+    color: var(--card-primary-dark);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+}
+
+.kitchen-card__title-link:hover {
+    color: var(--card-primary);
+}
+
+.kitchen-card__description {
+    color: #6c757d;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    flex-grow: 1;
+}
+
+.kitchen-card__rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.kitchen-card__stars {
+    color: #ffc107;
+}
+
+.kitchen-card__rating-count {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.kitchen-card__features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.kitchen-card__feature {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #495057;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.kitchen-card__feature i {
+    color: #6c757d;
+    font-size: 10px;
+}
+
+.kitchen-card__footer {
+    padding: 0 20px 20px 20px;
+    margin-top: auto;
+}
+
+.kitchen-card__price-section {
+    margin-bottom: 20px;
+    padding: 12px 0;
+    border-top: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.kitchen-card__old-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 6px;
+    opacity: 0.6;
+}
+
+.old-price-value {
+    text-decoration: line-through;
+    color: #9B9B9B;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.old-price-currency {
+    text-decoration: line-through;
+    color: #9B9B9B;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.kitchen-card__price {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 8px 0;
+    line-height: 1.2;
+}
+
+.price-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--card-primary);
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--card-primary), var(--card-primary-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.price-currency {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--card-primary);
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    position: relative;
+    top: -2px;
+}
+
+.kitchen-card__price-per {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--gray);
+    font-family: 'Tilda Sans', 'Inter', sans-serif;
+    font-weight: 400;
+    margin-top: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--card-border);
+}
+
+.kitchen-card__price-per i {
+    font-size: 11px;
+    color: var(--card-primary-light, #A68B6F);
+}
+
+.kitchen-card__actions {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 6px;
+}
+
+.kitchen-card__cart-btn,
+.kitchen-card__favorite-btn,
+.kitchen-card__compare-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.kitchen-card__cart-btn {
+    background: var(--card-primary);
+    color: white;
+    padding: 10px 12px;
+    font-size: 13px;
+    width: 100%;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.kitchen-card__cart-btn:hover {
+    background: var(--card-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 115, 85, 0.3);
+}
+
+.kitchen-card__favorite-btn {
+    background: #f8f9fa;
+    color: #495057;
+    position: relative;
+    overflow: hidden;
+    padding: 8px 10px;
+    font-size: 12px;
+    width: 100%;
+}
+
+.kitchen-card__favorite-btn:hover {
+    background: #e9ecef;
+}
+
+.kitchen-card__favorite-btn.active {
+    background: #fff5f5;
+    color: #ff4757;
+}
+
+.kitchen-card__favorite-icon {
+    position: relative;
+    width: 24px;
+    height: 24px;
+}
+
+.kitchen-card__favorite-outline,
+.kitchen-card__favorite-filled {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+    transition: all 0.3s ease;
+}
+
+.kitchen-card__favorite-outline {
+    opacity: 1;
+}
+
+.kitchen-card__favorite-filled {
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.kitchen-card__favorite-btn.active .kitchen-card__favorite-outline {
+    opacity: 0;
+}
+
+.kitchen-card__favorite-btn.active .kitchen-card__favorite-filled {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.kitchen-card__favorite-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.kitchen-card__compare-btn {
+    background: var(--card-light);
+    color: var(--card-primary-dark);
+    padding: 10px 12px;
+    font-size: 13px;
+    border: 1px solid var(--card-border);
+    width: 100%;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.kitchen-card__favorite-icon-btn {
+    background: var(--card-light);
+    color: var(--card-primary-dark);
+    border: 1px solid var(--card-border);
+    width: 100%;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.kitchen-card__favorite-icon-btn:hover {
+    background: #fff5f5;
+    color: #ff4757;
+    border-color: #ffccd5;
+}
+
+.kitchen-card__favorite-icon-btn.active {
+    background: #fff5f5;
+    color: #ff4757;
+    border-color: #ffccd5;
+}
+
+.kitchen-card__compare-btn:hover {
+    background: var(--card-primary);
+    color: white;
+    border-color: var(--card-primary);
+    transform: translateY(-1px);
+}
+
+.kitchen-card__btn-text {
+    display: inline;
+}
+
+/* Анимация для избранного */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.kitchen-card__favorite-btn.animating .kitchen-card__favorite-filled {
+    animation: heartBeat 0.6s ease;
+}
+
+/* Для мобильных устройств */
+@media (max-width: 768px) {
+    .kitchen-card__image-container {
+        height: 160px;
+    }
+    
+    .kitchen-card__content {
+        padding: 15px;
+    }
+    
+    .kitchen-card__title {
+        font-size: 14px;
+    }
+    
+    .kitchen-card__description {
+        font-size: 12px;
+    }
+    
+    .kitchen-card__price {
+        margin: 6px 0;
+    }
+    
+    .price-value {
+        font-size: 24px;
+    }
+    
+    .price-currency {
+        font-size: 18px;
+    }
+    
+    .old-price-value {
+        font-size: 14px;
+    }
+    
+    .kitchen-card__price-per {
+        font-size: 11px;
+    }
+    
+    .kitchen-card__actions {
+        grid-template-columns: 1.2fr 1fr;
+        gap: 6px;
+    }
+    
+    .kitchen-card__btn-text {
+        display: none;
+    }
+    
+    .kitchen-card__favorite-text {
+        display: none;
+    }
+}
+
+/* Для темной темы */
+@media (prefers-color-scheme: dark) {
+    .kitchen-card {
+        background: #2d3436;
+        border-color: #404040;
+    }
+    
+    .kitchen-card__title-link,
+    .kitchen-card__price {
+        color: #f8f9fa;
+    }
+    
+    .kitchen-card__description,
+    .kitchen-card__rating-count,
+    .kitchen-card__feature {
+        color: #adb5bd;
+    }
+    
+    .kitchen-card__feature {
+        background: #404040;
+    }
+    
+    .kitchen-card__favorite-btn {
+        background: #404040;
+        color: #adb5bd;
+    }
+    
+    .kitchen-card__favorite-btn:hover {
+        background: #4a4a4a;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Получение CSRF токена
+    function getCsrfToken() {
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        return cookieValue || '';
+    }
+
+    // Обработка клика по плавающему сердечку
+    document.querySelectorAll('.kitchen-card__favorite-fab').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (btn.dataset.loading === 'true') return;
+            btn.dataset.loading = 'true';
+            btn.classList.add('is-loading');
+
+            const wasFavorite = btn.classList.contains('active');
+            const toggleUrl = btn.dataset.toggleUrl;
+            const kitchenId = btn.dataset.kitchenId;
+
+            // короткая анимация клика
+            btn.style.transform = 'scale(0.94)';
+            setTimeout(() => (btn.style.transform = ''), 120);
+
+            try {
+                const response = await fetch(toggleUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                });
+
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Network error');
+                }
+
+                const data = await response.json();
+                const isFavorite = data.is_favorite;
+
+                // Обновляем сердечко
+                btn.classList.toggle('active', isFavorite);
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = isFavorite ? 'fas fa-heart' : 'far fa-heart';
+                }
+                btn.title = isFavorite ? 'Удалить из избранного' : 'Добавить в избранное';
+
+                // Обновляем бейдж
+                const badge = document.getElementById(`favorite-badge-${kitchenId}`);
+                if (badge) {
+                    badge.classList.toggle('visible', isFavorite);
+                }
+            } catch (err) {
+                console.error(err);
+                // Откатываем визуальное состояние, если не удалось
+                btn.classList.toggle('active', wasFavorite);
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = wasFavorite ? 'fas fa-heart' : 'far fa-heart';
+                }
+                btn.title = wasFavorite ? 'Удалить из избранного' : 'Добавить в избранное';
+            }
+            btn.dataset.loading = 'false';
+            btn.classList.remove('is-loading');
+        });
+    });
+});
+</script>

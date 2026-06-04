@@ -1,0 +1,29 @@
+﻿<!-- accounts/templates/accounts/profile_settings.html -->
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Настройки профиля | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Настройки профиля</h1>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Раздел настроек</h5>
+                    <p class="text-muted">Эта страница находится в разработке.</p>
+                    <p>В будущем здесь будут доступны настройки профиля, уведомлений и безопасности.</p>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'profile' %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left"></i> Вернуться в профиль
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

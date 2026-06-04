@@ -1,0 +1,613 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Профиль | {{ block.super }}{% endblock %}
+
+{% block content %}
+
+<!-- DATA ДЛЯ JS -->
+<div id="profile-data"
+     data-user-id="{{ user.id }}"
+     data-username="{{ user.username }}"
+     data-email="{{ user.email }}"
+     data-favorites-count="{{ user.favorites.count|default:0 }}">
+</div>
+
+<div class="container py-4">
+
+    <h1 class="mb-4">Профиль пользователя</h1>
+
+    <div class="row">
+        <!-- Левая колонка - информация о пользователе -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <!-- Аватар пользователя -->
+                    {% if avatar_url %}
+                    <img src="{{ avatar_url }}" 
+                         alt="Аватар" 
+                         class="rounded-circle mb-3" 
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center" 
+                         style="width: 150px; height: 150px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 48px;">
+                        {{ user.username|first|upper }}
+                    </div>
+                    {% endif %}
+                    
+                    <h5 class="card-title">{{ user.username }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                    
+                    <!-- Информация о пользователе -->
+                    <div class="text-start small mt-4">
+                        <p><strong>Имя:</strong> {{ user.first_name|default:"Не указано" }}</p>
+                        <p><strong>Фамилия:</strong> {{ user.last_name|default:"Не указано" }}</p>
+                        <p><strong>Телефон:</strong> {{ profile.phone_number|default:"Не указан" }}</p>
+                        <p><strong>Адрес:</strong> {{ profile.address|default:"Не указан"|truncatechars:50 }}</p>
+                        <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}</p>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'profile_edit' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit"></i> Редактировать профиль
+                        </a>
+                        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-sign-out-alt"></i> Выйти
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Статистика пользователя -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Статистика</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Избранных товаров:</span>
+                        <span class="badge bg-primary">{{ user.favorites.count|default:0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Заказов:</span>
+                        <span class="badge bg-success">{{ stats.total_orders|default:0 }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>С нами с:</span>
+                        <span>{{ user.date_joined|date:"d.m.Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Правая колонка - избранное и активность -->
+        <div class="col-lg-8">
+            
+            <!-- Вкладки -->
+            <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="favorites-tab" data-bs-toggle="tab" 
+                            data-bs-target="#favorites" type="button" role="tab">
+                        <i class="fas fa-heart"></i> Избранное
+                        <span class="badge bg-secondary">{{ favorites|length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="orders-tab" data-bs-toggle="tab" 
+                            data-bs-target="#orders" type="button" role="tab">
+                        <i class="fas fa-shopping-bag"></i> Мои заказы
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="activity-tab" data-bs-toggle="tab" 
+                            data-bs-target="#activity" type="button" role="tab">
+                        <i class="fas fa-history"></i> Активность
+                    </button>
+                </li>
+            </ul>
+            
+            <!-- Содержимое вкладок -->
+            <div class="tab-content" id="profileTabsContent">
+                
+                <!-- Вкладка избранного -->
+                <div class="tab-pane fade show active" id="favorites" role="tabpanel">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>Избранные товары</span>
+                            {% if favorites %}
+                            <a href="{% url 'catalog:catalog' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-plus"></i> Добавить еще
+                            </a>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-body">
+                            {% if favorites %}
+                                <div class="row">
+                                    {% for favorite in favorites %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100">
+                                                {% if favorite.kitchen.image %}
+                                                <img src="{{ favorite.kitchen.image.url }}" 
+                                                     class="card-img-top" 
+                                                     alt="{{ favorite.kitchen.name }}"
+                                                     style="height: 150px; object-fit: cover;">
+                                                {% else %}
+                                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center"
+                                                     style="height: 150px;">
+                                                    <i class="fas fa-image fa-3x text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                <div class="card-body">
+                                                    <h6 class="card-title">{{ favorite.kitchen.name }}</h6>
+                                                    <p class="card-text text-muted small">
+                                                        {{ favorite.kitchen.description|truncatechars:100 }}
+                                                    </p>
+                                                    
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="text-primary fw-bold">
+                                                            {{ favorite.kitchen.price }} руб.
+                                                        </span>
+                                                        
+                                                        <div class="btn-group">
+                                                            <a href="{% url 'catalog:kitchen_detail' favorite.kitchen.id %}" 
+                                                               class="btn btn-sm btn-outline-primary"
+                                                               title="Открыть карточку">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-outline-danger remove-favorite-btn"
+                                                                    data-favorite-id="{{ favorite.id }}"
+                                                                    data-kitchen-name="{{ favorite.kitchen.name }}"
+                                                                    title="Удалить из избранного">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {% if favorite.note %}
+                                                    <div class="mt-2 small text-muted">
+                                                        <i class="fas fa-sticky-note"></i>
+                                                        {{ favorite.note|truncatechars:50 }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <div class="card-footer bg-transparent border-top-0">
+                                                    <small class="text-muted">
+                                                        Добавлено: {{ favorite.added_at|date:"d.m.Y" }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                                    <h5>Ваш список избранного пуст</h5>
+                                    <p class="text-muted">Добавляйте понравившиеся товары, нажимая на сердечко</p>
+                                    <a href="{% url 'catalog:catalog' %}" class="btn btn-primary">
+                                        <i class="fas fa-shopping-cart"></i> Перейти в каталог
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вкладка заказов -->
+                <div class="tab-pane fade" id="orders" role="tabpanel">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            Мои заказы
+                        </div>
+                        <div class="card-body">
+                            {% if orders %}
+                                <div class="orders-list-profile">
+                                    {% for order in orders %}
+                                    <div class="order-card-profile mb-3" style="background: white; border-radius: 12px; border: 1px solid #E5DDD0; overflow: hidden; transition: all 0.3s ease;">
+                                        <div class="order-header-profile" style="background: linear-gradient(135deg, #FAF8F5 0%, #F5F1EB 100%); padding: 1rem 1.5rem; border-bottom: 1px solid #E5DDD0; cursor: pointer;" data-order-id="{{ order.id }}">
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <div style="flex: 1;">
+                                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                                        <h5 style="margin: 0; font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--dark, #3D3D3D);">
+                                                            <i class="fas fa-receipt me-2" style="color: var(--primary, #8B7355);"></i>Заказ #{{ order.id }}
+                                                        </h5>
+                                                        {% if order.status == 'new' %}
+                                                            <span class="badge" style="background: #3498db; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                                                                <i class="fas fa-clock"></i> Новый
+                                                            </span>
+                                                        {% elif order.status == 'processing' %}
+                                                            <span class="badge" style="background: #f39c12; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                                                                <i class="fas fa-cog"></i> В обработке
+                                                            </span>
+                                                        {% elif order.status == 'completed' %}
+                                                            <span class="badge" style="background: #2ecc71; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                                                                <i class="fas fa-check"></i> Завершен
+                                                            </span>
+                                                        {% elif order.status == 'cancelled' %}
+                                                            <span class="badge" style="background: #e74c3c; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;">
+                                                                <i class="fas fa-times"></i> Отменен
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--gray, #9B9B9B); font-family: 'Tilda Sans', 'Inter', sans-serif;">
+                                                        <i class="fas fa-calendar me-1"></i>{{ order.created_at|date:"d.m.Y H:i" }}
+                                                        <span style="margin: 0 0.5rem;">•</span>
+                                                        <i class="fas fa-ruble-sign me-1"></i><strong style="color: var(--primary, #8B7355);">{{ order.total_price|floatformat:0 }} ₽</strong>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <i class="fas fa-chevron-down order-chevron-{{ order.id }}" style="color: var(--primary, #8B7355); transition: transform 0.3s ease;"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="order-details-{{ order.id }}" style="display: none; padding: 1.5rem;">
+                                            <div style="margin-bottom: 1.5rem;">
+                                                <h6 style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--primary, #8B7355); margin-bottom: 0.75rem;">
+                                                    <i class="fas fa-shopping-bag me-2"></i>Товары в заказе:
+                                                </h6>
+                                                <div style="display: grid; gap: 1rem;">
+                                                    {% for item in order.orderitem_set.all %}
+                                                    <div style="background: linear-gradient(135deg, #FAF8F5 0%, #F5F1EB 100%); border-radius: 10px; padding: 1rem; border: 1px solid #E5DDD0; display: flex; align-items: center; gap: 1rem;">
+                                                        {% if item.kitchen.image %}
+                                                        <div style="flex-shrink: 0; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                                                            <img src="{{ item.kitchen.image.url }}" alt="{{ item.kitchen.name }}" 
+                                                                 style="width: 100%; height: 100%; object-fit: cover;">
+                                                        </div>
+                                                        {% else %}
+                                                        <div style="flex-shrink: 0; width: 80px; height: 80px; border-radius: 8px; background: linear-gradient(135deg, #E5DDD0, #D4C4B0); display: flex; align-items: center; justify-content: center;">
+                                                            <i class="fas fa-image" style="color: #8B7355; opacity: 0.5;"></i>
+                                                        </div>
+                                                        {% endif %}
+                                                        <div style="flex: 1; min-width: 0;">
+                                                            <h6 style="margin: 0 0 0.25rem 0; font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--dark, #3D3D3D);">
+                                                                <a href="{% url 'catalog:kitchen_detail' item.kitchen.id %}" style="color: inherit; text-decoration: none;">
+                                                                    {{ item.kitchen.name }}
+                                                                </a>
+                                                            </h6>
+                                                            <div style="font-size: 0.85rem; color: var(--gray, #9B9B9B); font-family: 'Tilda Sans', 'Inter', sans-serif;">
+                                                                <span>Количество: <strong style="color: var(--primary, #8B7355);">{{ item.quantity }}</strong></span>
+                                                                <span style="margin: 0 0.5rem;">•</span>
+                                                                <span>Цена: <strong style="color: var(--primary, #8B7355);">{{ item.price|floatformat:0 }} ₽</strong></span>
+                                                            </div>
+                                                        </div>
+                                                        <div style="flex-shrink: 0; text-align: right;">
+                                                            <div style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--primary, #8B7355);">
+                                                                {{ item.item_total|floatformat:0 }} ₽
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% if order.address or order.phone %}
+                                            <div style="border-top: 1px solid #E5DDD0; padding-top: 1rem; margin-top: 1rem;">
+                                                <h6 style="font-family: 'Tilda Sans', 'Inter', sans-serif; font-weight: 600; color: var(--primary, #8B7355); margin-bottom: 0.75rem;">
+                                                    <i class="fas fa-info-circle me-2"></i>Информация о доставке:
+                                                </h6>
+                                                {% if order.address %}
+                                                <p style="margin: 0.5rem 0; font-family: 'Tilda Sans', 'Inter', sans-serif; color: var(--dark-text, #4A4A4A);">
+                                                    <i class="fas fa-map-marker-alt me-2" style="color: var(--primary, #8B7355);"></i><strong>Адрес:</strong> {{ order.address }}
+                                                </p>
+                                                {% endif %}
+                                                {% if order.phone %}
+                                                <p style="margin: 0.5rem 0; font-family: 'Tilda Sans', 'Inter', sans-serif; color: var(--dark-text, #4A4A4A);">
+                                                    <i class="fas fa-phone me-2" style="color: var(--primary, #8B7355);"></i><strong>Телефон:</strong> {{ order.phone }}
+                                                </p>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                                    <h5>У вас еще нет заказов</h5>
+                                    <p class="text-muted">Сделайте свой первый заказ и отслеживайте его здесь</p>
+                                    <a href="{% url 'catalog:catalog' %}" class="btn btn-primary">
+                                        <i class="fas fa-shopping-cart"></i> Перейти к покупкам
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Вкладка активности -->
+                <div class="tab-pane fade" id="activity" role="tabpanel">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            История активности
+                        </div>
+                        <div class="card-body">
+                            {% if activities %}
+                                <div class="list-group list-group-flush">
+                                    {% for activity in activities %}
+                                    <div class="list-group-item border-0 px-0">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-{{ activity.get_icon|default:'info-circle' }} text-primary"></i>
+                                                {{ activity.get_description }}
+                                            </h6>
+                                            <small class="text-muted">{{ activity.created_at|timesince }} назад</small>
+                                        </div>
+                                        {% if activity.details %}
+                                        <p class="mb-1 small text-muted">
+                                            {{ activity.details }}
+                                        </p>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                    <h5>Активность не найдена</h5>
+                                    <p class="text-muted">Ваши действия на сайте будут отображаться здесь</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+    'use strict';
+    
+    console.log('Profile script loaded');
+    
+    // Функция для получения CSRF токена
+    function getCsrfToken() {
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        
+        if (!cookieValue) {
+            const metaToken = document.querySelector('meta[name="csrf-token"]');
+            if (metaToken) {
+                return metaToken.getAttribute('content');
+            }
+        }
+        
+        return cookieValue || '';
+    }
+    
+    // Используем делегирование событий для динамически загружаемых элементов
+    document.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.remove-favorite-btn');
+        if (!removeBtn) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const favoriteId = removeBtn.dataset.favoriteId;
+        const kitchenName = removeBtn.dataset.kitchenName;
+        
+        console.log('Remove button clicked:', favoriteId, kitchenName);
+        
+        if (!favoriteId) {
+            console.error('Favorite ID not found');
+            alert('Ошибка: ID товара не найден');
+            return;
+        }
+        
+        if (confirm(`Удалить "${kitchenName}" из избранного?`)) {
+            // Блокируем кнопку
+            removeBtn.disabled = true;
+            const originalHTML = removeBtn.innerHTML;
+            removeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            fetch(`/accounts/favorites/remove/${favoriteId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.status === 'success') {
+                    // Удаляем карточку из DOM
+                    const card = removeBtn.closest('.col-md-6');
+                    if (card) {
+                        card.style.transition = 'opacity 0.3s';
+                        card.style.opacity = '0';
+                        setTimeout(() => card.remove(), 300);
+                    }
+
+                    // Обновляем счетчик
+                    const badge = document.querySelector('#favorites-tab .badge');
+                    if (badge) {
+                        badge.textContent = data.total_favorites;
+                    }
+                    
+                    // Обновляем счетчик в статистике
+                    const statsBadge = document.querySelector('.card-body .badge.bg-primary');
+                    if (statsBadge) {
+                        statsBadge.textContent = data.total_favorites;
+                    }
+
+                    // Если список пуст, показываем сообщение
+                    setTimeout(() => {
+                        const favoritesContainer = document.querySelector('#favorites .row');
+                        if (favoritesContainer) {
+                            const visibleCards = favoritesContainer.querySelectorAll('.col-md-6').length;
+                            if (visibleCards === 0) {
+                                favoritesContainer.innerHTML = `
+                                    <div class="col-12 text-center py-5">
+                                        <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                                        <h5>Ваш список избранного пуст</h5>
+                                        <p class="text-muted">Добавляйте понравившиеся товары, нажимая на сердечко</p>
+                                        <a href="{% url 'catalog:catalog' %}" class="btn btn-primary">
+                                            <i class="fas fa-shopping-cart"></i> Перейти в каталог
+                                        </a>
+                                    </div>
+                                `;
+                            }
+                        }
+                    }, 350);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                console.error('Error removing favorite:', error);
+                alert('Не удалось удалить товар из избранного. Попробуйте еще раз.');
+                removeBtn.disabled = false;
+                removeBtn.innerHTML = originalHTML;
+            });
+        }
+    });
+    
+    // Инициализация при загрузке
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM loaded, buttons found:', document.querySelectorAll('.remove-favorite-btn').length);
+    });
+})();
+
+    // Функция для получения CSRF токена
+    function getCsrfToken() {
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        
+        // Если используется meta тег
+        if (!cookieValue) {
+            const metaToken = document.querySelector('meta[name="csrf-token"]');
+            if (metaToken) {
+                return metaToken.getAttribute('content');
+            }
+        }
+        
+        return cookieValue || '';
+    }
+
+    // Функция показа уведомлений
+    function showNotification(message, type = 'info') {
+        // Создаем элемент уведомления
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
+        
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Автоматически скрываем через 5 секунд
+        setTimeout(() => {
+            if (notification.parentNode) {
+                const bsAlert = new bootstrap.Alert(notification);
+                bsAlert.close();
+            }
+        }, 5000);
+    }
+
+    // Инициализация вкладок Bootstrap
+    const triggerTabList = [].slice.call(document.querySelectorAll('#profileTabs button'));
+    triggerTabList.forEach(function (triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl);
+        
+        triggerEl.addEventListener('click', function (event) {
+            event.preventDefault();
+            tabTrigger.show();
+            
+            // Сохраняем активную вкладку в localStorage
+            const activeTab = this.getAttribute('data-bs-target');
+            localStorage.setItem('activeProfileTab', activeTab);
+        });
+    });
+    
+    // Восстанавливаем активную вкладку
+    const activeTabId = localStorage.getItem('activeProfileTab');
+    if (activeTabId) {
+        const activeTab = document.querySelector(`[data-bs-target="${activeTabId}"]`);
+        if (activeTab) {
+            const tab = new bootstrap.Tab(activeTab);
+            tab.show();
+        }
+    }
+
+    // Обработчик для редактирования заметок (если нужно добавить)
+    document.querySelectorAll('.edit-note-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const favoriteId = this.dataset.favoriteId;
+            const currentNote = this.dataset.currentNote || '';
+            
+            // Простое модальное окно для заметки
+            const note = prompt('Введите заметку для товара:', currentNote);
+            if (note !== null) {
+                fetch(`/accounts/favorites/update-note/${favoriteId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({ note: note })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showNotification('Заметка сохранена', 'success');
+                        // Можно обновить отображение заметки на странице
+                        const noteElement = this.closest('.card-body').querySelector('.note-text');
+                        if (noteElement) {
+                            noteElement.textContent = note || 'Добавить заметку...';
+                        }
+                    }
+                });
+            }
+        });
+    });
+    
+    // Обработчики для раскрытия деталей заказов
+    document.querySelectorAll('.order-header-profile').forEach(header => {
+        header.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            const details = document.querySelector('.order-details-' + orderId);
+            const chevron = document.querySelector('.order-chevron-' + orderId);
+            
+            if (details && chevron) {
+                if (details.style.display === 'none' || !details.style.display) {
+                    details.style.display = 'block';
+                    chevron.style.transform = 'rotate(180deg)';
+                } else {
+                    details.style.display = 'none';
+                    chevron.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

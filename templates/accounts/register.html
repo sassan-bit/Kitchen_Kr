@@ -1,0 +1,329 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 register-card">
+                <div class="card-body p-5">
+                    <!-- Заголовок -->
+                    <div class="text-center mb-4">
+                        <div class="register-icon mb-3">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <h2 class="fw-bold mb-2">Добро пожаловать!</h2>
+                        <p class="text-muted">Создайте аккаунт, чтобы начать покупки</p>
+                    </div>
+                    
+                    <form method="post" id="registerForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Общие ошибки формы -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            {{ form.non_field_errors }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Поле: Имя пользователя -->
+                        <div class="mb-4">
+                            <label for="id_username" class="form-label fw-semibold">
+                                <i class="fas fa-user text-primary me-2"></i>Имя пользователя
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {{ form.username.errors|first }}
+                            </div>
+                            {% endif %}
+                            {% if form.username.help_text %}
+                            <small class="form-text text-muted">{{ form.username.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Поле: Email -->
+                        <div class="mb-4">
+                            <label for="id_email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope text-primary me-2"></i>Email
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {{ form.email.errors|first }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Поле: Пароль -->
+                        <div class="mb-4">
+                            <label for="id_password1" class="form-label fw-semibold">
+                                <i class="fas fa-lock text-primary me-2"></i>Пароль
+                            </label>
+                            <div class="input-group">
+                                {{ form.password1 }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword1">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password1.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {{ form.password1.errors|first }}
+                            </div>
+                            {% endif %}
+                            {% if form.password1.help_text %}
+                            <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Поле: Подтверждение пароля -->
+                        <div class="mb-4">
+                            <label for="id_password2" class="form-label fw-semibold">
+                                <i class="fas fa-lock text-primary me-2"></i>Подтверждение пароля
+                            </label>
+                            <div class="input-group">
+                                {{ form.password2 }}
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.errors %}
+                            <div class="invalid-feedback d-block">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {{ form.password2.errors|first }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Кнопка регистрации -->
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3 register-btn">
+                            <i class="fas fa-user-plus me-2"></i>
+                            <span>Создать аккаунт</span>
+                        </button>
+                        
+                        <!-- Разделитель -->
+                        <div class="text-center my-4">
+                            <hr class="my-0">
+                            <span class="bg-white px-3 text-muted small">или</span>
+                        </div>
+                        
+                        <!-- Ссылка на вход -->
+                        <div class="text-center">
+                            <p class="mb-0 text-muted">
+                                Уже есть аккаунт?
+                                <a href="{% url 'login' %}" class="text-decoration-none fw-semibold">
+                                    Войти
+                                </a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Дополнительная информация -->
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    Регистрируясь, вы соглашаетесь с нашими 
+                    <a href="#" class="text-decoration-none">условиями использования</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.register-card {
+    border-radius: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.register-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.register-icon i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.register-card .form-control {
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    padding: 12px 16px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.register-card .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    transform: translateY(-2px);
+}
+
+.register-card .form-label {
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.register-btn {
+    border-radius: 10px;
+    padding: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.register-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.register-btn:active {
+    transform: translateY(0);
+}
+
+.input-group .btn {
+    border-radius: 0 10px 10px 0;
+    border-left: none;
+    border-color: #e9ecef;
+}
+
+.input-group .form-control {
+    border-right: none;
+}
+
+.input-group .form-control:focus + .btn {
+    border-color: #667eea;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+@media (max-width: 768px) {
+    .register-card {
+        margin: 20px;
+    }
+    
+    .card-body {
+        padding: 2rem !important;
+    }
+    
+    .register-icon {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .register-icon i {
+        font-size: 2rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Переключение видимости пароля
+    const togglePassword1 = document.getElementById('togglePassword1');
+    const togglePassword2 = document.getElementById('togglePassword2');
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    
+    if (togglePassword1 && password1) {
+        togglePassword1.addEventListener('click', function() {
+            const type = password1.getAttribute('type') === 'password' ? 'text' : 'password';
+            password1.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    if (togglePassword2 && password2) {
+        togglePassword2.addEventListener('click', function() {
+            const type = password2.getAttribute('type') === 'password' ? 'text' : 'password';
+            password2.setAttribute('type', type);
+            this.querySelector('i').classList.toggle('fa-eye');
+            this.querySelector('i').classList.toggle('fa-eye-slash');
+        });
+    }
+    
+    // Добавляем классы к полям формы
+    const formControls = document.querySelectorAll('#registerForm input');
+    formControls.forEach(input => {
+        if (input.classList.contains('form-control')) {
+            input.classList.add('form-control-lg');
+        }
+    });
+    
+    // Валидация в реальном времени
+    const form = document.getElementById('registerForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            formControls.forEach(input => {
+                if (!input.value.trim() && input.required) {
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            });
+            
+            // Проверка совпадения паролей
+            if (password1 && password2 && password1.value !== password2.value) {
+                isValid = false;
+                password2.classList.add('is-invalid');
+                if (!password2.nextElementSibling || !password2.nextElementSibling.classList.contains('invalid-feedback')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'invalid-feedback d-block';
+                    errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Пароли не совпадают';
+                    password2.parentElement.parentElement.appendChild(errorDiv);
+                }
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

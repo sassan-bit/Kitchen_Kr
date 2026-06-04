@@ -1,0 +1,91 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Редактирование профиля | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Редактирование профиля</h1>
+            <p class="text-muted mb-0">Обновите данные учетной записи и профиля</p>
+        </div>
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Назад в профиль
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="row g-3">
+                        {% csrf_token %}
+
+                        <div class="col-md-6">
+                            <label class="form-label">Имя</label>
+                            {{ user_form.first_name }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Фамилия</label>
+                            {{ user_form.last_name }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Email</label>
+                            {{ user_form.email }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Телефон</label>
+                            {{ profile_form.phone_number }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Дата рождения</label>
+                            {{ profile_form.birth_date }}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Адрес</label>
+                            {{ profile_form.address }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Аватар</label>
+                            {{ profile_form.avatar }}
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Отмена</a>
+                            <button type="submit" class="btn btn-primary">Сохранить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-3">Текущий аватар</h6>
+                    {% if profile_form.instance.avatar %}
+                        <img src="{{ profile_form.instance.avatar.url }}"
+                             alt="Аватар"
+                             class="rounded-circle mb-3"
+                             style="width: 140px; height: 140px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center"
+                             style="width: 140px; height: 140px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-size: 42px;">
+                            {{ request.user.username|first|upper }}
+                        </div>
+                    {% endif %}
+                    <p class="small text-muted mb-0">Разрешены jpg, png. Рекомендовано до 2 МБ.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

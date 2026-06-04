@@ -1,0 +1,445 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Оформление заказа | {{ block.super }}{% endblock %}
+
+{% block extra_head %}
+<!-- Подключение API Яндекс.Карт -->
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=cfd7c126-e64e-4690-a37a-3cc837c582ca" type="text/javascript"></script>
+<!-- Подключение jQuery (если еще не подключен) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=cfd7c126-e64e-4690-a37a-3cc837c582ca" type="text/javascript"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<div class="page-header">
+    <h1><i class="fas fa-shopping-cart"></i> Оформление заказа</h1>
+    <p>Заполните данные для доставки</p>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <div>
+        <div class="form-container">
+            <h3><i class="fas fa-user"></i> Ваши данные</h3>
+            <form method="post" id="orderForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="full_address"><i class="fas fa-map-marker-alt"></i> Адрес доставки *</label>
+                    <p class="form-help" style="font-size: 0.9rem; color: #666; margin-bottom: 0.5rem;">
+                        Выберите адрес на карте или введите в поле поиска
+                    </p>
+                    
+                    <!-- Скрытые поля для хранения данных от карты -->
+                    <input type="hidden" id="id_address" name="address" value="" required>
+                    <input type="hidden" id="id_latitude" name="latitude" value="">
+                    <input type="hidden" id="id_longitude" name="longitude" value="">
+                    
+                    <!-- Поле для поиска адреса -->
+                    <div style="margin-bottom: 1rem;">
+                        <div class="input-group">
+                            <input type="text" id="suggest" class="form-control" placeholder="Начните вводить адрес...">
+                            <button type="button" id="clearAddress" class="btn btn-sm" style="background: #e74c3c; color: white;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <p id="addressError" style="color: #e74c3c; display: none; margin-top: 0.5rem;">
+                            <i class="fas fa-exclamation-circle"></i> Адрес не найден или некорректен
+                        </p>
+                    </div>
+                    
+                    <!-- Контейнер для карты -->
+                    <div id="map" style="width: 100%; height: 300px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 1rem; display: none;"></div>
+                    
+                    <!-- Блок для отображения выбранного адреса -->
+                    <div id="selectedAddress" style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 5px; display: none;">
+                        <p style="margin: 0; display: flex; align-items: center;">
+                            <i class="fas fa-check-circle" style="color: #2ecc71; margin-right: 8px;"></i>
+                            <strong>Выбранный адрес:</strong> 
+                            <span id="addressText" style="margin-left: 5px;"></span>
+                        </p>
+                        <button type="button" id="changeAddress" class="btn btn-sm" style="margin-top: 0.5rem;">
+                            <i class="fas fa-edit"></i> Изменить адрес
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone"><i class="fas fa-phone"></i> Телефон для связи *</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" required 
+                           placeholder="+7 (999) 123-45-67" pattern="^\+7\s?[\(]?\d{3}[\)]?\s?\d{3}[\-]?\d{2}[\-]?\d{2}$">
+                    <p class="form-help">Формат: +7 XXX XXX-XX-XX</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes"><i class="fas fa-sticky-note"></i> Примечания к заказу</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="3" 
+                              placeholder="Например: этаж, код домофона, удобное время доставки..."></textarea>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 5px; margin: 1.5rem 0;">
+                    <h4><i class="fas fa-check-circle" style="color: #2ecc71;"></i> Итоговая сумма</h4>
+                    <p style="font-size: 1.8rem; font-weight: bold; color: #e74c3c; margin: 0.5rem 0;">
+                        {{ total_price|floatformat:"0" }} ₽
+                    </p>
+                    <p style="font-size: 0.9rem; color: #7f8c8d; margin: 0;">
+                        Включая доставку и сборку. Окончательная сумма может незначительно отличаться.
+                    </p>
+                </div>
+                
+                <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Важно:</strong> После оформления заказа с вами свяжется менеджер для подтверждения деталей доставки.
+                </div>
+                
+                <button type="submit" id="submitBtn" class="btn btn-success" style="width: 100%; font-size: 1.1rem; padding: 0.8rem;">
+                    <i class="fas fa-check"></i> Подтвердить заказ
+                </button>
+                
+                <a href="{% url 'cart' %}" class="btn" style="width: 100%; margin-top: 1rem;">
+                    <i class="fas fa-arrow-left"></i> Вернуться в корзину
+                </a>
+            </form>
+        </div>
+    </div>
+    
+    <div>
+        <div style="background: white; border-radius: 10px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3><i class="fas fa-list"></i> Состав заказа</h3>
+            
+            {% if cart_items %}
+            <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+                {% for item in cart_items %}
+                <li style="padding: 1rem 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <strong>{{ item.kitchen.name }}</strong>
+                        <p style="margin: 0.3rem 0 0 0; color: #7f8c8d; font-size: 0.9rem;">
+                            {{ item.quantity }} × {{ item.kitchen.price|floatformat:"0" }} ₽
+                        </p>
+                    </div>
+                    <div style="font-weight: bold; color: #2c3e50; min-width: 100px; text-align: right;">
+                        {{ item.total_price|floatformat:"0" }} ₽
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            
+            <div style="border-top: 2px solid #eee; margin-top: 1rem; padding-top: 1rem; text-align: right;">
+                <p style="font-size: 1.2rem; font-weight: bold; color: #2c3e50; margin: 0;">
+                    Итого: {{ total_price|floatformat:"0" }} ₽
+                </p>
+            </div>
+            {% else %}
+            <div class="text-center p-2">
+                <i class="fas fa-shopping-cart" style="font-size: 3rem; color: #ddd;"></i>
+                <p style="margin-top: 1rem;">Корзина пуста</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-top: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3><i class="fas fa-info-circle"></i> Информация о доставке</h3>
+            <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+                <li style="padding: 0.5rem 0; display: flex; align-items: center;">
+                    <i class="fas fa-truck" style="color: #3498db; margin-right: 0.8rem; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong>Доставка:</strong> 1-3 рабочих дня в пределах МКАД
+                        <p style="margin: 0.2rem 0 0 0; color: #7f8c8d; font-size: 0.9rem;">
+                            За МКАД +1000 ₽ к стоимости
+                        </p>
+                    </div>
+                </li>
+                <li style="padding: 0.5rem 0; display: flex; align-items: center;">
+                    <i class="fas fa-tools" style="color: #3498db; margin-right: 0.8rem; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong>Сборка:</strong> включена в стоимость
+                        <p style="margin: 0.2rem 0 0 0; color: #7f8c8d; font-size: 0.9rem;">
+                            Профессиональная сборка бригадой мастеров
+                        </p>
+                    </div>
+                </li>
+                <li style="padding: 0.5rem 0; display: flex; align-items: center;">
+                    <i class="fas fa-credit-card" style="color: #3498db; margin-right: 0.8rem; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong>Оплата:</strong> при получении
+                        <p style="margin: 0.2rem 0 0 0; color: #7f8c8d; font-size: 0.9rem;">
+                            Наличными или банковской картой
+                        </p>
+                    </div>
+                </li>
+                <li style="padding: 0.5rem 0; display: flex; align-items: center;">
+                    <i class="fas fa-shield-alt" style="color: #3498db; margin-right: 0.8rem; font-size: 1.2rem;"></i>
+                    <div>
+                        <strong>Гарантия:</strong> 2 года на все изделия
+                        <p style="margin: 0.2rem 0 0 0; color: #7f8c8d; font-size: 0.9rem;">
+                            Бесплатное гарантийное обслуживание
+                        </p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div style="background: #e8f4fc; border-radius: 10px; padding: 1.5rem; margin-top: 1.5rem; border-left: 4px solid #3498db;">
+            <h4><i class="fas fa-headset"></i> Нужна помощь?</h4>
+            <p style="margin: 0.5rem 0;">
+                Звоните: <strong>+7 (495) 123-45-67</strong><br>
+                Работаем: Пн-Пт 9:00-20:00, Сб-Вс 10:00-18:00
+            </p>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+// 1. ОБРАБОТЧИК ДЛЯ ГАРАНТИИ ЗАГРУЗКИ БИБЛИОТЕКИ
+ymaps.ready(main);
+
+// 2. ГЛАВНАЯ ФУНКЦИЯ, ВСЯ ЛОГИКА ВНУТРИ НЕЁ
+function main() {
+    console.log('API Яндекс.Карт загружено, ymaps готов к использованию.');
+
+    // --- Объявляем глобальные переменные для карты и метки ---
+    var map, placemark, selectedAddress = null;
+
+    // --- Инициализация карты и поиска ---
+    function initMapAndSearch() {
+    // ВИДИМ КАРТУ СРАЗУ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+    $('#map').show();
+    $('#map').css({ height: '400px' });
+    
+    // Создаем карту
+    map = new ymaps.Map('map', {
+        center: [55.76, 37.64],
+        zoom: 10,
+        controls: ['zoomControl', 'fullscreenControl']
+    });
+    
+    // Добавляем тестовую метку, чтобы убедиться, что карта работает
+    var testPlacemark = new ymaps.Placemark([55.76, 37.64], {
+        balloonContent: 'Центр карты',
+        hintContent: 'Тестовая метка'
+    });
+    map.geoObjects.add(testPlacemark);
+    testPlacemark.balloon.open();
+    
+    console.log('Карта создана!', map);
+
+        // Инициализация подсказок для поля ввода адреса
+        var suggestView = new ymaps.SuggestView('suggest', {
+            results: 5
+        });
+
+        // Обработка выбора подсказки
+        suggestView.events.add('select', function (e) {
+            var selectedItem = e.get('item');
+            geocode(selectedItem.value);
+        });
+
+        // Обработчик ввода вручную (по нажатию Enter)
+        $('#suggest').on('keypress', function(e) {
+            if (e.which == 13) { // Клавиша Enter
+                e.preventDefault();
+                geocode($(this).val());
+            }
+        });
+
+        // Обработчик клика по карте
+        map.events.add('click', function (e) {
+            var clickCoords = e.get('coords');
+            reverseGeocode(clickCoords);
+        });
+    }
+
+    // --- Функция геокодирования (адрес -> координаты) ---
+    function geocode(request) {
+        if (!request || request.trim() === '') {
+            showError('Введите адрес для поиска');
+            return;
+        }
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Поиск...');
+        ymaps.geocode(request).then(function (res) {
+            $('#submitBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Подтвердить заказ');
+            var obj = res.geoObjects.get(0);
+            if (obj) {
+                var precision = obj.properties.get('metaDataProperty.GeocoderMetaData.precision');
+                if (precision === 'exact' || precision === 'number' || precision === 'near' || precision === 'range') {
+                    showResult(obj);
+                } else {
+                    showError('Уточните номер дома');
+                }
+            } else {
+                showError('Адрес не найден');
+            }
+        }, function (err) {
+            $('#submitBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Подтвердить заказ');
+            showError('Ошибка сети. Проверьте подключение.');
+        });
+    }
+
+    // --- Функция обратного геокодирования (координаты -> адрес) ---
+    function reverseGeocode(coords) {
+        ymaps.geocode(coords).then(function (res) {
+            var obj = res.geoObjects.get(0);
+            if (obj) {
+                showResult(obj);
+            }
+        });
+    }
+
+    // --- Функция отображения результата на карте ---
+    function showResult(obj) {
+        var coords = obj.geometry.getCoordinates();
+        var fullAddress = obj.getAddressLine();
+        var shortAddress = [obj.getThoroughfare(), obj.getPremiseNumber()].filter(Boolean).join(', ') || fullAddress;
+
+        selectedAddress = { coords: coords, fullAddress: fullAddress, shortAddress: shortAddress };
+
+        // Заполняем скрытые поля формы
+        $('#id_address').val(fullAddress);
+        $('#id_latitude').val(coords[0]);
+        $('#id_longitude').val(coords[1]);
+        $('#addressText').text(fullAddress);
+
+        // Показываем элементы интерфейса
+        $('#map').show();
+        $('#selectedAddress').show();
+        $('#addressError').hide();
+        $('#suggest').val(fullAddress);
+
+        // Обновляем или создаем карту и метку
+        if (!map) {
+            initMapAndSearch();
+        }
+        map.setCenter(coords, 17);
+        if (placemark) {
+            map.geoObjects.remove(placemark);
+        }
+        placemark = new ymaps.Placemark(coords, {
+            balloonContent: shortAddress,
+            hintContent: 'Место доставки'
+        }, {
+            preset: 'islands#redIcon',
+            draggable: true
+        });
+        map.geoObjects.add(placemark);
+        placemark.balloon.open();
+
+        // Событие перетаскивания метки
+        placemark.events.add('dragend', function () {
+            var newCoords = placemark.geometry.getCoordinates();
+            reverseGeocode(newCoords);
+        });
+    }
+
+    // --- Вспомогательные функции ---
+    function showError(message) {
+        $('#addressError').text(message).show();
+        $('#map').hide();
+        $('#selectedAddress').hide();
+        clearAddressFields();
+    }
+
+    function clearAddressFields() {
+        $('#id_address').val('');
+        $('#id_latitude').val('');
+        $('#id_longitude').val('');
+        $('#addressText').text('');
+    }
+
+    // --- Обработчики кнопок интерфейса ---
+    $('#clearAddress').click(function() {
+        $('#suggest').val('');
+        $('#map').hide();
+        $('#selectedAddress').hide();
+        $('#addressError').hide();
+        clearAddressFields();
+        if (placemark) {
+            map.geoObjects.remove(placemark);
+            placemark = null;
+        }
+        selectedAddress = null;
+    });
+
+    $('#changeAddress').click(function() {
+        $('#clearAddress').click();
+        $('#suggest').focus();
+    });
+
+    // --- Валидация формы перед отправкой ---
+    $('#orderForm').submit(function(e) {
+        if (!$('#id_address').val()) {
+            showError('Пожалуйста, выберите адрес доставки на карте');
+            $('#suggest').focus();
+            e.preventDefault();
+            return false;
+        }
+        if (!$('#phone').val()) {
+            alert('Пожалуйста, укажите номер телефона');
+            $('#phone').focus();
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    });
+
+    // --- Форматирование телефона (маска ввода) ---
+    $('#phone').on('input', function() {
+        var phone = $(this).val().replace(/\D/g, '');
+        if (phone.length === 11 && phone[0] === '8') {
+            phone = '+7' + phone.substring(1);
+        }
+        $(this).val(formatPhone(phone));
+    });
+
+    function formatPhone(phone) {
+        var cleaned = ('' + phone).replace(/\D/g, '');
+        var match = cleaned.match(/^(\d{1})(\d{3})(\d{3})(\d{2})(\d{2})$/);
+        if (match) {
+            return '+7 (' + match[2] + ') ' + match[3] + '-' + match[4] + '-' + match[5];
+        }
+        return phone;
+    }
+
+    // 3. ИНИЦИАЛИЗИРУЕМ КАРТУ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+    // Карта создастся скрытой и будет показываться после выбора адреса
+    initMapAndSearch();
+}
+</script>
+
+<style>
+.input-group {
+    display: flex;
+}
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.input-group .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: none;
+}
+.alert {
+    padding: 12px 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+</style>
+{% endblock %}

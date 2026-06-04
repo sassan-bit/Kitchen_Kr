@@ -1,0 +1,300 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Кухни на заказ | Премиум кухни{% endblock %}</title>
+
+    <!-- Tilda Sans Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Используем похожий шрифт Inter как fallback, так как Tilda Sans может быть недоступен -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Подключаем Tilda Sans через @font-face -->
+    <style>
+        @font-face {
+            font-family: 'Tilda Sans';
+            src: url('https://static.tildacdn.com/fonts/tildasans/tildasans-regular.woff2') format('woff2'),
+                 url('https://static.tildacdn.com/fonts/tildasans/tildasans-regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Tilda Sans';
+            src: url('https://static.tildacdn.com/fonts/tildasans/tildasans-medium.woff2') format('woff2'),
+                 url('https://static.tildacdn.com/fonts/tildasans/tildasans-medium.woff') format('woff');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Tilda Sans';
+            src: url('https://static.tildacdn.com/fonts/tildasans/tildasans-semibold.woff2') format('woff2'),
+                 url('https://static.tildacdn.com/fonts/tildasans/tildasans-semibold.woff') format('woff');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'Tilda Sans';
+            src: url('https://static.tildacdn.com/fonts/tildasans/tildasans-bold.woff2') format('woff2'),
+                 url('https://static.tildacdn.com/fonts/tildasans/tildasans-bold.woff') format('woff');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Ваш файл стилей -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Иконки Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Дополнительные стили для навигации -->
+    <style>
+        /* Гарантированное переопределение Bootstrap */
+        header {
+            background: linear-gradient(135deg, #FAF8F5 0%, #F5F1EB 50%, #E8E0D6 100%) !important;
+            border-bottom: 2px solid #E5DDD0 !important;
+        }
+        
+        .navbar {
+            background: transparent !important;
+        }
+        
+        .navbar-nav .nav-link {
+            color: #4A4A4A !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+            transform: translateY(-3px) scale(1.02) !important;
+        }
+        
+        .navbar-brand {
+            color: #5A4A32 !important;
+            font-weight: 700 !important;
+            font-size: 1.6rem !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+            white-space: nowrap !important;
+            overflow: visible !important;
+            flex-shrink: 0 !important;
+        }
+        
+        .navbar-brand i {
+            color: #6B5A42 !important;
+        }
+        
+        .navbar-brand:hover {
+            color: #5A4A32 !important;
+            background: rgba(139, 115, 85, 0.15) !important;
+        }
+        
+        .navbar-brand:hover i {
+            color: #5A4A32 !important;
+        }
+
+        @media (max-width: 991px) {
+            .nav-text { display: none; }
+            .navbar-nav .nav-link { padding: 0.5rem 0.75rem !important; }
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Шапка сайта -->
+    <header style="background: linear-gradient(135deg, #FAF8F5 0%, #F5F1EB 50%, #E8E0D6 100%) !important; border-bottom: 2px solid #E5DDD0 !important;">
+        <nav class="navbar navbar-expand-lg navbar-light" style="background: transparent !important;">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'home' %}">
+                    <i class="fas fa-utensils"></i> КухниМастер
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'catalog:catalog' %}" style="color: #4A4A4A !important; background: transparent !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;"><i class="fas fa-store"></i> <span class="nav-text">Каталог</span></a>
+                        </li>
+                        {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'cart' %}" style="color: #4A4A4A !important; background: transparent !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;">
+                                <i class="fas fa-shopping-cart"></i> <span class="nav-text">Корзина</span>
+                                {% if cart_count %}
+                                <span class="badge" style="background: linear-gradient(135deg, #C9A961, #A68B4F) !important; color: white !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important;">{{ cart_count }}</span>
+                                {% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'order_list' %}" style="color: #4A4A4A !important; background: transparent !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;"><i class="fas fa-receipt"></i> <span class="nav-text">Заказы</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'profile' %}" style="color: #4A4A4A !important; background: transparent !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;"><i class="fas fa-user"></i> <span class="nav-text">Профиль</span></a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'contacts' %}" style="color: #4A4A4A !important; background: transparent !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;"><i class="fas fa-phone"></i> <span class="nav-text">Контакты</span></a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        {% if user.is_authenticated %}
+                            <li class="nav-item">
+                                <span class="navbar-text me-3" style="font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important; color: #4A4A4A !important;">
+                                    <i class="fas fa-user-circle me-2"></i>Привет, {{ user.username }}!
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm nav-logout-btn" style="background: transparent !important; border: 2px solid #8B7355 !important; color: #8B7355 !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;">
+                                        <i class="fas fa-sign-out-alt"></i> Выйти
+                                    </button>
+                                </form>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'login' %}" style="color: #4A4A4A !important; background: transparent !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;">
+                                    <i class="fas fa-sign-in-alt"></i> Войти
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-sm ms-2 nav-register-btn" href="{% url 'register' %}" style="background: linear-gradient(135deg, #8B7355, #6B5A42) !important; border: none !important; color: white !important; font-family: 'Tilda Sans', 'Inter', sans-serif !important; font-weight: 500 !important;">
+                                    <i class="fas fa-user-plus me-1"></i> Регистрация
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Основной контент страницы -->
+    <main class="container my-5" style="max-width: 1400px;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Подвал сайта -->
+    <footer class="py-4 mt-5" style="background: linear-gradient(135deg, var(--primary-dark, #6B5A42) 0%, var(--primary, #8B7355) 100%); color: white;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><i class="fas fa-utensils"></i> КухниМастер</h5>
+                    <p>Изготовление кухонь на заказ с 2010 года. Качество, стиль и надежность.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Контакты</h5>
+                    <p><i class="fas fa-phone"></i> +7 (495) 123-45-67</p>
+                    <p><i class="fas fa-envelope"></i> info@kuhnimaster.ru</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Мы в соцсетях</h5>
+                    <p>
+                        <a href="https://max.ru" class="text-white me-2" target="_blank"><i class="fab fa-maxcdn"></i> MAX</a> |
+                        <a href="https://rutube.ru" class="text-white mx-2" target="_blank"><i class="fab fa-youtube"></i> Rutube</a> |
+                        <a href="https://russia.tv" class="text-white ms-2" target="_blank"><i class="fas fa-tv"></i> Россия 1</a>
+                    </p>
+                </div>
+            </div>
+            <hr class="bg-light">
+            <p class="text-center mb-0">&copy; {% now "Y" %} Кухни на заказ. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ MAX БЕЗ КНОПОК ЗАКРЫТИЯ -->
+    <!-- МОДАЛЬНОЕ ОКНО ДЛЯ MAX БЕЗ КНОПОК ЗАКРЫТИЯ -->
+<div class="modal fade" id="maxModal" tabindex="-1" aria-labelledby="maxModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title w-100 text-center" id="maxModalLabel">
+                    <i class="fab fa-maxcdn me-2"></i>Установите наш мессенджер
+                </h5>
+                <!-- Кнопка закрытия УБРАНА -->
+            </div>
+            <div class="modal-body text-center">
+                <!-- ВАШ QR-КОД. Убедитесь, что файл лежит в static/img/ -->
+                <div class="mb-4">
+                    <!-- Обратите внимание на новый путь -->
+                    <img src="/media/max_qr.png"
+                         alt="QR-код для скачивания MAX" 
+                         class="img-fluid border rounded" 
+                         style="max-width: 200px;">
+                    <p class="text-muted small mt-2">Отсканируйте QR-код для быстрой загрузки</p>
+                </div>
+
+                <p class="lead">Общайтесь с нами удобнее и быстрее через официальный мессенджер MAX!</p>
+                <p>Быстрые ответы, поддержка и актуальные новости — всё в одном приложении.</p>
+                
+                <div class="d-grid gap-2 col-8 mx-auto mt-4">
+                    <a href="https://max.ru" target="_blank" class="btn btn-primary btn-lg">
+                        <i class="fas fa-download me-2"></i> Скачать MAX
+                    </a>
+                </div>
+            </div>
+            <!-- Кнопка закрытия в футере УБРАНА -->
+        </div>
+    </div>
+</div>
+
+    <!-- Подключение JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Показ модального окна через минуту после загрузки страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const maxModal = new bootstrap.Modal(document.getElementById('maxModal'), {
+                    backdrop: 'static', // Не закрывать по клику на фон
+                    keyboard: false     // Не закрывать по клавише Esc
+                });
+                maxModal.show();
+            }, 120000); //2 минута
+            
+            // Автоматическое выделение активной ссылки
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            
+            navLinks.forEach(link => {
+                const linkPath = new URL(link.href).pathname;
+                if (currentPath === linkPath || 
+                    (currentPath.startsWith(linkPath) && linkPath !== '/')) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Плавная прокрутка при клике на ссылки
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Добавляем небольшую задержку для визуального эффекта
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
